@@ -41,6 +41,18 @@
   border-radius: 8px;
 }
 
+/* Make the entire li clickable and maintain white text */
+.menu li a {
+  text-decoration: none;  /* Remove underline */
+  color: white;  /* Keep the text color white */
+  display: block;  /* Make <a> take the full width of the li */
+  width: 100%;  /* Ensure the link takes the entire width */
+}
+
+.menu li a:hover {
+  
+}
+
 .main-content {
   margin-left: 250px; /* Reserve space for the sidebar on the left */
   flex: 1; /* Ensure it grows to take available space */

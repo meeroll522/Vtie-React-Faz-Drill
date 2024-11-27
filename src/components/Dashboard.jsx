@@ -1,11 +1,11 @@
 import React from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js'; // Import necessary components
-import { Pie } from 'react-chartjs-2'; // If using a pie chart
-import { Bar } from 'react-chartjs-2'; // If using a bar chart
-import '../styles/Dashboard.css'; // Ensure this path is correct for your project
+import { Link } from 'react-router-dom';  // Import Link from react-router-dom
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
+import '../styles/Dashboard.css';
 import logo from '../styles/img/faz-drill-logo3.png';
 
-// Register the chart components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const Dashboard = () => {
@@ -17,7 +17,11 @@ const Dashboard = () => {
         </div>
         <ul className="menu">
           <li className="active">Dashboard</li>
-          <li>Daily Drilling Report</li>
+          <li className="report-link">
+            <Link to="/daily-drilling-report" className="report-link"> {/* Wrap entire li with the Link */}
+              Daily Drilling Report
+            </Link>
+          </li>
           <li>Message</li>
           <li>Help</li>
           <li>Settings</li>
@@ -25,7 +29,6 @@ const Dashboard = () => {
           <li>Sign Out</li>
         </ul>
       </aside>
-
       <main className="main-content">
         <header className="header">
           <input type="text" className="search-bar" placeholder="Search here" />

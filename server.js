@@ -1,20 +1,10 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import pkg from 'pg';
 import cors from 'cors';
-
-const { Pool } = pkg;
+import { client } from './db.js'; // Import the client from db.js
 
 const app = express(); // Initialize Express app
 const PORT = 5000;
-
-const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'fazdrill',
-    password: 'ftsb@123',
-    port: 5432,
-});
 
 // Middleware
 app.use(cors()); // Allow cross-origin requests
@@ -31,7 +21,7 @@ app.post('/api/create-user', async (req, res) => {
         `;
         const values = [full_name, email, password, role, status, role_id, company_id];
 
-        await pool.query(query, values);
+        await client.query(query, values);
 
         res.status(201).json({ message: 'User created successfully' });
     } catch (error) {
@@ -51,7 +41,7 @@ app.post('/login', async (req, res) => {
         `;
         const values = [email, password];
 
-        const result = await pool.query(query, values);
+        const result = await client.query(query, values);
 
         if (result.rows.length > 0) {
             res.status(200).json({ message: 'Login successful', user: result.rows[0] });
@@ -61,6 +51,38 @@ app.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ error: 'An error occurred during login' });
+    }
+});
+
+// GET route to fetch country by ID
+app.get('/api/countries', async (req, res) => {
+    try {
+        // Query to fetch country_name for country_id = 133 (Malaysia)
+        const query = 'SELECT country_id, country_name FROM tbl_country WHERE country_id = $1';
+        const values = [133]; // Malaysia
+
+        const result = await client.query(query, values);
+
+        if (result.rows.length > 0) {
+            res.status(200).json(result.rows[0]); // Return the country data as JSON
+        } else {
+            res.status(404).json({ message: 'Country not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching country data:', error);
+        res.status(500).json({ error: 'An error occurred while fetching country data' });
+    }
+});
+
+// Handle server shutdown gracefully
+process.on('SIGINT', async () => {
+    try {
+        await client.end(); // Close database connection
+        console.log('Database connection closed.');
+        process.exit(0);
+    } catch (error) {
+        console.error('Error during shutdown:', error);
+        process.exit(1);
     }
 });
 
