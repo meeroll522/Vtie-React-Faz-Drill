@@ -1,15 +1,56 @@
-.custom-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .custom-table th, .custom-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-  
-  .custom-table th {
-    background-color: #f2f2f2;
-  }
-  
+/* DataGrid container */
+.data-grid-container {
+  height: 100%;  /* Full height */
+  width: 100%;  /* Full container width */
+  max-width: 1200px;  /* Optional: Limit maximum width */
+  margin: 20px auto;
+  border: 2px solid #4caf50;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;  /* Horizontal scroll if needed */
+}
+
+/* Header style */
+.MuiDataGrid-columnHeader {
+  background-color: #86c237 !important;
+  color: white !important;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;  /* Center-align column headers */
+}
+
+/* Row style */
+.MuiDataGrid-row {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.MuiDataGrid-row:hover {
+  background-color: #e8f5e9;  /* Light green hover effect */
+}
+
+/* Cell styling */
+.MuiDataGrid-cell {
+  text-align: center;  /* Center-align cell text */
+  padding: 12px;  /* Adjust padding for better spacing */
+}
+
+.table-container {
+  margin: 20px;
+}
+
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-container th, .table-container td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #ffff;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+}

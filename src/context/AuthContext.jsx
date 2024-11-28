@@ -1,42 +1,32 @@
-// src/context/AuthContext.jsx
-import { createContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
 
-  // Function to log in
-  const login = async (credentials) => {
+  const login = async (data) => {
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {
         const result = await response.json();
-        setUser(result.user);  // Set user data after successful login
-        navigate('/dashboard');  // Redirect to dashboard
+        setUser(result);  // Save the user info (including company_id)
+        console.log('Login successful:', result);
       } else {
-        throw new Error('Login failed');
+        console.error('Login failed:', response.statusText);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Error during login:', error);
     }
   };
 
-  // Function to log out
-  const logout = () => {
-    setUser(null);
-    navigate('/');  // Redirect to login page
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login }}>
       {children}
     </AuthContext.Provider>
   );
