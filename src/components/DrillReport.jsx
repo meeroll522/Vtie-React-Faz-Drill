@@ -1,86 +1,136 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import '../styles/Table.css';  // Ensure correct CSS import
+import React, { useState, useEffect } from 'react';
+import { fetchCountries, fetchFields, fetchSites, fetchWells, fetchWellbores } from '../services/api';
+import Card from './ui/Card';
+import Table from './ui/table/Table';  // Default import
+import { TableHeader, TableRow, TableHead, TableBody, TableCell } from './ui/table/Table';  // Named imports
+import '../styles/table.css';
 
-function DrillReport() {
-  const { user } = useContext(AuthContext);  // Retrieve user from context
+const DrillReport = () => {
   const [countries, setCountries] = useState([]);
-  const [error, setError] = useState(null);  // Track errors
-  const [loading, setLoading] = useState(true);  // Track loading state
+  const [fields, setFields] = useState([]);
+  const [sites, setSites] = useState([]);
+  const [wells, setWells] = useState([]);
+  const [wellbores, setWellbores] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedField, setSelectedField] = useState(null);
+  const [selectedSite, setSelectedSite] = useState(null);
+  const [selectedWell, setSelectedWell] = useState(null);
+  const [selectedWellbore, setSelectedWellbore] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (user) {  // Only log user data when it is available
-      console.log('User data:', user);
-      
-      if (user.company_id) {
-        setLoading(true); // Ensure loading is true before making the fetch request
-        fetch(`/api/getCountries?companyId=${user.company_id}`)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`Server error: ${response.statusText}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            setCountries(data);
-            setLoading(false);  // Data fetched, stop loading
-          })
-          .catch((error) => {
-            console.error('Error fetching countries:', error);
-            setError('Failed to fetch country data.');
-            setLoading(false);  // Stop loading if error occurs
-          });
-      } else {
-        setError('Company ID is missing.');
-        setLoading(false);  // Stop loading if company_id is missing
-      }
+  // Generic function to handle API fetch and state update
+  const fetchData = async (fetchFunction, setFunction, resetFunctions = [], setLoading, setError) => {
+    setLoading(true);
+    try {
+      const data = await fetchFunction();
+      setFunction(data);
+      resetFunctions.forEach(reset => reset([]));  // Clear dependent selections
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
-  }, [user]);  // Runs whenever 'user' changes
+  };
 
-  if (loading) {
-    return <p>Loading...</p>;  // Display loading message while fetching data
-  }
+  // Fetch countries on component mount
+  useEffect(() => {
+    fetchData(fetchCountries, setCountries, [], setLoading, setError);
+  }, []);
+
+  // Fetch fields based on selected country
+  useEffect(() => {
+    if (selectedCountry) {
+      fetchData(() => fetchFields(selectedCountry), setFields, [setSites, setWells, setWellbores], setLoading, setError);
+    }
+  }, [selectedCountry]);
+
+  // Fetch sites based on selected field
+  useEffect(() => {
+    if (selectedField) {
+      fetchData(() => fetchSites(selectedField), setSites, [setWells, setWellbores], setLoading, setError);
+    }
+  }, [selectedField]);
+
+  // Fetch wells based on selected site
+  useEffect(() => {
+    if (selectedSite) {
+      fetchData(() => fetchWells(selectedSite), setWells, [setWellbores], setLoading, setError);
+    }
+  }, [selectedSite]);
+
+  // Fetch wellbores based on selected well
+  useEffect(() => {
+    if (selectedWell) {
+      fetchData(() => fetchWellbores(selectedWell), setWellbores, [], setLoading, setError);
+    }
+  }, [selectedWell]);
+
+  // Handle selection changes and reset dependent selections
+  const handleSelect = (id, setFunction, resetFunctions) => {
+    setFunction(id);
+    resetFunctions.forEach(reset => reset([])); // Clear dependent selections
+  };
+
+  // Generic table rendering for different data types (countries, fields, etc.)
+  const renderTable = (data, headers, handleSelect, label) => (
+    <Table className="mt-6">
+      <TableHeader>
+        <TableRow>
+          {headers.map((header, idx) => (
+            <TableHead key={idx}>{header}</TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.isArray(data) && data.map((item) => (
+          <TableRow key={item[`${label}_id`]}>
+            <TableCell>{item[`${label}_name`]}</TableCell>
+            <TableCell>
+              <button onClick={() => handleSelect(item[`${label}_id`], label)} className="btn btn-primary">
+                Select
+              </button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   return (
-    <div className="table-container">
-      {error && <div className="error-message">{error}</div>}  {/* Display error */}
+    <Card className="p-4">
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-500">{error}</p>}
 
-      {user ? (
-        <table>
-          <thead>
-            <tr>
-              <th>COUNTRY</th>
-              <th>FIELD</th>
-              <th>SITE</th>
-              <th>WELL</th>
-              <th>WELLBORE</th>
-              <th>REPORT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {countries.length > 0 ? (
-              countries.map((country) => (
-                <tr key={country.country_id}>
-                  <td>{country.country_name}</td>
-                  <td>{country.field_name}</td>
-                  <td>{country.site_name}</td>
-                  <td>{country.well_name}</td>
-                  <td>{country.wellbore_name}</td>
-                  <td>{country.report_name}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6">No countries found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      ) : (
-        <p>User data is not available.</p>  
-      )}
-    </div>
+      {/* Country Selection */}
+      <h2>Selected Country: {selectedCountry ? countries.find(c => c.country_id === selectedCountry)?.country_name : 'None'}</h2>
+      {renderTable(countries, ['Country', 'Actions'], (id, label) => {
+        setSelectedCountry(id);
+        handleSelect(id, setSelectedCountry, [setFields, setSites, setWells, setWellbores]);
+      }, 'country')}
+
+      {/* Field Selection */}
+      {selectedCountry && renderTable(fields, ['Field', 'Actions'], (id, label) => {
+        setSelectedField(id);
+        handleSelect(id, setSelectedField, [setSites, setWells, setWellbores]);
+      }, 'field')}
+
+      {/* Site Selection */}
+      {selectedField && renderTable(sites, ['Site', 'Actions'], (id, label) => {
+        setSelectedSite(id);
+        handleSelect(id, setSelectedSite, [setWells, setWellbores]);
+      }, 'site')}
+
+      {/* Well Selection */}
+      {selectedSite && renderTable(wells, ['Well', 'Actions'], (id, label) => {
+        setSelectedWell(id);
+        handleSelect(id, setSelectedWell, [setWellbores]);
+      }, 'well')}
+
+      {/* Wellbore Selection */}
+      {selectedWell && renderTable(wellbores, ['Wellbore', 'Actions'], setSelectedWellbore, 'wellbore')}
+    </Card>
   );
-}
+};
 
 export default DrillReport;
