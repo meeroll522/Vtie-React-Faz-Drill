@@ -6,8 +6,6 @@ const API_URL = 'http://localhost:5000/api';  // Your API base URL
 export const fetchCountries = async () => {
     try {
       const response = await axios.get(`${API_URL}/countries`);
-      console.log (response.data);  // Returning the data part of the response
-      return response.data;
     } catch (error) {
       console.error('Error fetching countries:', error);
       throw error;  // Rethrow the error so it can be handled in the component
