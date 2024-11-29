@@ -53,6 +53,27 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ error: 'An error occurred during login' });
     }
 });
+
+// GET route to fetch country by ID
+app.get('/api/countries', async (req, res) => {
+    try {
+        // Query to fetch country_name for country_id = 133 (Malaysia)
+        const query = 'SELECT country_id, country_name FROM tbl_country WHERE country_id = $1';
+        const values = [133]; // Malaysia
+
+        const result = await client.query(query, values);
+
+        if (result.rows.length > 0) {
+            res.status(200).json(result.rows[0]); // Return the country data as JSON
+        } else {
+            res.status(404).json({ message: 'Country not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching country data:', error);
+        res.status(500).json({ error: 'An error occurred while fetching country data' });
+    }
+});
+
 // Handle server shutdown gracefully
 process.on('SIGINT', async () => {
     try {
